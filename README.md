@@ -35,9 +35,9 @@ npm install
 ```env
 PORT=3000
 DB_HOST=localhost
-DB_USER=root
+DB_USERNAME=root
 DB_PASSWORD=your_password
-DB_NAME=whatsapp_bot
+DB_SCHEMA=whatsapp_bot
 ```
 
 4. Start the server:

@@ -1,10 +1,10 @@
 const mysql = require('mysql2/promise');
 
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'pwtestdb',
-    database: process.env.DB_NAME || 'salondb'
+    host: process.env.DB_HOST,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_SCHEMA
 };
 
 async function getDbConnection() {
@@ -20,9 +20,9 @@ async function initDatabase() {
     try {
         console.log('Initializing database...');
         const connection = await mysql.createConnection(dbConfig);
-        
+
         await connection.execute('DROP TABLE IF EXISTS messages');
-        
+
         await connection.execute(`
             CREATE TABLE IF NOT EXISTS wa_tokens (
                 id INT NOT NULL AUTO_INCREMENT,
@@ -35,7 +35,7 @@ async function initDatabase() {
                 PRIMARY KEY (id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
         `);
-        
+
         console.log('Database initialized successfully');
         await connection.end();
     } catch (error) {
