@@ -1,0 +1,110 @@
+name: Deploy Node.js App to STG
+run-name: ${{ github.actor }} is deploying 🚀
+
+on: 
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-node-app:
+    runs-on: ubuntu-latest
+    env:
+      SVC_NAME: whatsapp-node-service
+      PRIVATE_KEY: ${{ secrets.DO_STG_PRIVATE_KEY_BSH }}
+      USER_NAME: ${{ secrets.DO_USERNAME }}
+      HOSTNAME: "68.183.88.235"
+
+    steps:
+      - name: Print basic info
+        run: |
+          echo "Triggered by ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Repo: ${{ github.repository }}"
+
+      - name: Set environment variables
+        run: |
+          echo "CTS=$(date '+%Y%m%d%H%M')" >> $GITHUB_ENV
+          echo "REPLICAS=1" >> $GITHUB_ENV
+          echo "PORT=8080" >> $GITHUB_ENV
+          echo "NODEPORT=30801" >> $GITHUB_ENV
+
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # - name: Build project
+      #   run: npm run build
+
+      - name: Replace Tokens
+        uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '__'
+          tokenSuffix: '__'
+          files: '["**/*.yaml"]'
+        env:
+          MICROSERVICE_NAME: ${{ env.SVC_NAME }}
+          ECR_URL: 688706015200.dkr.ecr.ap-south-1.amazonaws.com/harr
+          TAG: ${{ env.SVC_NAME }}_${{ env.CTS }}
+          REPLICAS: ${{ env.REPLICAS }}
+          PORT: ${{ env.PORT }}
+          NODEPORT: ${{ env.NODEPORT }}
+          MIN_CPU: 300m
+          MAX_CPU: 300m
+          MIN_MEM: 512Mi
+          MAX_MEM: 512Mi
+
+      - name: Verify manifest files
+        working-directory: ./manifest
+        run: |
+          ls -l
+          cat $SVC_NAME-configmap.yaml
+          cat $SVC_NAME-deployment.yaml
+
+      - name: Copy manifest to bastion
+        run: |
+          echo "$PRIVATE_KEY" > ~/private_key && chmod 600 ~/private_key
+          scp -i ~/private_key -o StrictHostKeyChecking=no -rp ./manifest ${USER_NAME}@${HOSTNAME}:/tmp
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::688706015200:role/custom-community-gh-actions-ecr-role
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push Docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: harr
+          IMAGE_TAG: ${{ env.SVC_NAME }}_${{ env.CTS }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Deploy to Minikube via Bastion
+        run: |
+          echo "$PRIVATE_KEY" > ~/private_key && chmod 600 ~/private_key
+          ssh -o StrictHostKeyChecking=no -i ~/private_key ${USER_NAME}@${HOSTNAME} << EOF
+          cd /tmp
+          kubectl apply -f manifest/$SVC_NAME-configmap.yaml
+          kubectl apply -f manifest/$SVC_NAME-deployment.yaml
+          kubectl get pods -o wide
+          kubectl get svc -o wide
+          EOF
+
+      - name: Print job status
+        run: echo "✅ Deployment complete. Status"

@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: __MICROSERVICE_NAME__
+  labels:
+    app: __MICROSERVICE_NAME__
+spec:
+  selector:
+    matchLabels:
+      app: __MICROSERVICE_NAME__
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: __MICROSERVICE_NAME__
+    spec:
+      containers:
+        - name: __MICROSERVICE_NAME__
+          image: __ECR_URL__:__TAG__
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: __MIN_CPU__
+              memory: __MIN_MEM__
+            requests:
+              cpu: __MAX_CPU__
+              memory: __MAX_MEM__
+          ports:
+            - containerPort: __PORT__
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: __MICROSERVICE_NAME__
+spec:
+  type: NodePort
+  selector:
+    app: __MICROSERVICE_NAME__
+  ports:
+    - targetPort: __PORT__
+      port: __PORT__

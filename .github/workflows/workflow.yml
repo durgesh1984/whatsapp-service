@@ -1,0 +1,86 @@
+name: Deploy to STG
+run-name: ${{ github.actor }} is deploying 🚀
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  Deploy-Service:
+    runs-on: ubuntu-latest
+    env:
+      SVC_NAME: whatsapp-node-service
+
+    steps:
+      - name: Print Info
+        run: |
+          echo "🎉 Triggered by: ${{ github.event_name }}"
+          echo "🐧 Runner OS: ${{ runner.os }}"
+          echo "🔀 Branch: ${{ github.ref }}"
+          echo "📦 Repo: ${{ github.repository }}"
+
+      - name: Set environment variables
+        run: |
+          echo "CTS=$(date '+%Y%m%d%H%M')" >> $GITHUB_ENV 
+          echo "REPLICAS=1" >> $GITHUB_ENV
+          echo "PORT=3000" >> $GITHUB_ENV  # Your app uses 3000
+        shell: bash
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::688706015200:role/custom-community-gh-actions-ecr-role
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: harrise/docker-registry
+          IMAGE_TAG: ${{ env.SVC_NAME }}_${{ env.CTS }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Install and configure kubectl
+        run: |
+          curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.15/2022-10-31/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl
+          echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+          export PATH=$PATH:$HOME/bin
+          kubectl version --client
+          aws eks --region ap-south-1 update-kubeconfig --name dev-community-myeks
+
+
+      - name: Replace Tokens in manifest YAML
+        uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '__'
+          tokenSuffix: '__'
+          files: '["**/*.yaml"]'
+        env:
+          MICROSERVICE_NAME: ${{ env.SVC_NAME }}
+          ECR_URL: 688706015200.dkr.ecr.ap-south-1.amazonaws.com/harrise/docker-registry
+          TAG: ${{ env.SVC_NAME }}_${{ env.CTS }}
+          REPLICAS: ${{ env.REPLICAS }}
+          PORT: ${{ env.PORT }}
+          MIN_CPU: 100m
+          MAX_CPU: 100m
+          MIN_MEM: 200Mi
+          MAX_MEM: 200Mi
+
+      - name: Deploy to Kubernetes
+        run: |
+          echo "🧾 Final manifest:"
+          cat manifest/deployment.yaml
+          kubectl apply -f manifest/deployment.yaml
+
+      - name: Job Status
+        run: echo "✅ Deployment complete. 

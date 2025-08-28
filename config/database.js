@@ -3,8 +3,8 @@ const mysql = require('mysql2/promise');
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'whatsapp_bot'
+    password: process.env.DB_PASSWORD || 'pwtestdb',
+    database: process.env.DB_NAME || 'salondb'
 };
 
 async function getDbConnection() {

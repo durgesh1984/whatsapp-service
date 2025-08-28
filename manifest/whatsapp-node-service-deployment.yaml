@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: __MICROSERVICE_NAME__
+  labels:
+    app: __MICROSERVICE_NAME__
+spec:
+  replicas: __REPLICAS__
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: __MICROSERVICE_NAME__
+  template:
+    metadata:
+      labels:
+        app: __MICROSERVICE_NAME__
+    spec:
+      containers:
+        - name: __MICROSERVICE_NAME__
+          image: __ECR_URL__:__TAG__
+          imagePullPolicy: Always
+          ports:
+            - containerPort: __PORT__
+          resources:
+            limits:
+              cpu: __MIN_CPU__
+              memory: __MIN_MEM__
+            requests:
+              cpu: __MAX_CPU__
+              memory: __MAX_MEM__
+          envFrom:
+            - configMapRef:
+                name: common-config
+            - configMapRef:
+                name: __MICROSERVICE_NAME__-config
+          volumeMounts:
+            - name: applogs
+              mountPath: /tmp/__MICROSERVICE_NAME__
+      volumes:
+        - name: applogs
+          hostPath:
+            path: /applogs/__MICROSERVICE_NAME__
+      imagePullSecrets:
+        - name: aws-ecr-credentials
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: __MICROSERVICE_NAME__
+  labels:
+    app: __MICROSERVICE_NAME__
+spec:
+  type: ClusterIP
+  selector:
+    app: __MICROSERVICE_NAME__
+  ports:
+    - name: http
+      port: __PORT__
+      targetPort: __PORT__
