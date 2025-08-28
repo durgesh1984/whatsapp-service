@@ -1,4 +1,4 @@
-name: Deploy Node.js App to STG
+name: Deploy to PROD-MICROK8S UPGRADE
 run-name: ${{ github.actor }} is deploying 🚀
 
 on: 
@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SVC_NAME: whatsapp-node-service
-      PRIVATE_KEY: ${{ secrets.DO_STG_PRIVATE_KEY_BSH }}
+      PRIVATE_KEY: ${{ secrets.DO_PRIVATE_KEY_BSH_V1 }}
       USER_NAME: ${{ secrets.DO_USERNAME }}
-      HOSTNAME: "68.183.88.235"
+      HOSTNAME: "64.227.171.61"
 
     steps:
       - name: Print basic info
@@ -59,10 +59,10 @@ jobs:
           REPLICAS: ${{ env.REPLICAS }}
           PORT: ${{ env.PORT }}
           NODEPORT: ${{ env.NODEPORT }}
-          MIN_CPU: 300m
-          MAX_CPU: 300m
-          MIN_MEM: 512Mi
-          MAX_MEM: 512Mi
+          MIN_CPU: 500m
+          MAX_CPU: 500m
+          MIN_MEM: 1024Mi
+          MAX_MEM: 1024Mi
 
       - name: Verify manifest files
         working-directory: ./manifest
