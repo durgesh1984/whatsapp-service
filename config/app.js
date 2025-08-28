@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const config = {
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 8080,
     upload: {
         dir: './uploads',
         maxSize: 50 * 1024 * 1024 // 50MB
