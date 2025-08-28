@@ -21,7 +21,7 @@ async function initDatabase() {
         console.log('Initializing database...');
         const connection = await mysql.createConnection(dbConfig);
 
-        await connection.execute('DROP TABLE IF EXISTS messages');
+        // await connection.execute('DROP TABLE IF EXISTS messages');
 
         await connection.execute(`
             CREATE TABLE IF NOT EXISTS wa_tokens (
