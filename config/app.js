@@ -7,7 +7,7 @@ const config = {
         maxSize: 50 * 1024 * 1024 // 50MB
     },
     session: {
-        dir: './auth_sessions',
+        dir: '/tmp/whatsapp-node-service/sessions',
         cleanupInterval: 24 * 60 * 60 * 1000 // 24 hours
     },
     whatsapp: {
