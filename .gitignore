@@ -1,0 +1,12 @@
+.vscode/
+.claude/
+.idea/
+node_modules/
+.env
+auth_info_baileys/
+*.log
+.DS_Store
+auth_sessions/*
+!auth_sessions/.gitkeep
+uploads/*
+!uploads/.gitkeep
