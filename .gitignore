@@ -2,7 +2,7 @@
 .claude/
 .idea/
 node_modules/
-.env
+# .env
 auth_info_baileys/
 *.log
 .DS_Store
