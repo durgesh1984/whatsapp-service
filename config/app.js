@@ -4,11 +4,11 @@ const config = {
     port: process.env.PORT || 8080,
     upload: {
         dir: './uploads',
-        maxSize: 50 * 1024 * 1024 // 50MB
+        maxSize: process.env.UPLOAD_MAX_SIZE || 50 * 1024 * 1024 // 50MB
     },
     session: {
-        dir: '/tmp/whatsapp-node-service/sessions',
-        cleanupInterval: 24 * 60 * 60 * 1000 // 24 hours
+        dir: process.env.SESSION_DIR || '/tmp/whatsapp-node-service/sessions',
+        cleanupInterval: process.env.SESSION_CLEANUP_HOURS || 24 * 60 * 60 * 1000 // 24 hours
     },
     whatsapp: {
         printQRInTerminal: false,
