@@ -67,11 +67,25 @@ class WhatsAppService {
                     connectionData.isLoggedIn = true;
                     connectionData.qr = null;
                     
-                    await SessionService.updateStatus(sessionId, '1');
+                    const scanID = sock.user?.id || null;
+                    const scanName = sock.user?.name || null;
+                    
+                    await SessionService.updateStatus(sessionId, '1', scanID, scanName);
                 }
             });
 
-            sock.ev.on('creds.update', saveCreds);
+            sock.ev.on('creds.update', async (update) => {
+                saveCreds();
+                
+                // When user information becomes available, update scan_id and scan_name
+                if (update.me && connectionData.isLoggedIn) {
+                    const scanID = update.me.id || null;
+                    const scanName = update.me.name || null;
+                    
+                    console.log(`Updating scan info for ${sessionId}: ID=${scanID}, Name=${scanName}`);
+                    await SessionService.updateStatus(sessionId, '1', scanID, scanName);
+                }
+            });
 
             WhatsAppService.activeConnections.set(sessionId, connectionData);
             return connectionData;

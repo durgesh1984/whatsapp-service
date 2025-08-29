@@ -1,13 +1,20 @@
 const { getDbConnection } = require('../config/database');
 
 class SessionService {
-    static async updateStatus(sessionId, status) {
+    static async updateStatus(sessionId, status, scanId = null, scanName = null) {
         try {
             const connection = await getDbConnection();
-            await connection.execute(
-                'UPDATE wa_tokens SET status = ? WHERE token = ?',
-                [status, sessionId]
-            );
+            if (scanId !== null && scanName !== null) {
+                await connection.execute(
+                    'UPDATE wa_tokens SET status = ?, scan_id = ?, scan_name = ? WHERE token = ?',
+                    [status, scanId, scanName, sessionId]
+                );
+            } else {
+                await connection.execute(
+                    'UPDATE wa_tokens SET status = ? WHERE token = ?',
+                    [status, sessionId]
+                );
+            }
             await connection.end();
         } catch (error) {
             console.error('Error updating token status:', error);
