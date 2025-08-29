@@ -16,7 +16,7 @@ router.get('/get-qr/:id', validateSessionId, getQRCode);
 router.get('/get-fresh-qr/:id', validateSessionId, getFreshQRCode);
 router.post('/send-message', upload.none(), validateMessageRequest, sendTextMessage);
 router.post('/send-media', upload.none(), validateMediaURLRequest, sendMediaFromURL);
-router.post('/logout', validateSessionId, logout);
+router.post('/logout', upload.none(), validateSessionId, logout);
 router.post('/clean-expired', cleanExpiredSessions);
 router.get('/health', healthCheck);
 
