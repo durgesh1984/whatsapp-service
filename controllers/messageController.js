@@ -9,7 +9,6 @@ const { config } = require('../config/app');
 async function sendTextMessage(req, res) {
     try {
         const { id, number, message } = req.body;
-        console.log(`POST /send-message for session: ${id}`);
 
         const connectionData = WhatsAppService.getConnection(id);
         
@@ -42,7 +41,6 @@ async function sendTextMessage(req, res) {
 async function sendMediaFromURL(req, res) {
     try {
         const { id, number, filePath, caption } = req.body;
-        console.log(`POST /send-media for session: ${id}`);
 
         const connectionData = WhatsAppService.getConnection(id);
         
@@ -53,7 +51,6 @@ async function sendMediaFromURL(req, res) {
             });
         }
 
-        // Download file from URL
         const tempFileName = `temp_${Date.now()}_${Math.round(Math.random() * 1E9)}`;
         const tempFilePath = path.join(config.upload.dir, tempFileName);
         
@@ -70,7 +67,6 @@ async function sendMediaFromURL(req, res) {
 
         const jid = formatPhoneNumber(number);
         
-        // Determine media type from URL
         const urlLower = filePath.toLowerCase();
         let mediaType = 'document';
         
@@ -94,7 +90,6 @@ async function sendMediaFromURL(req, res) {
 
         await connectionData.sock.sendMessage(jid, mediaMessage);
 
-        // Clean up temp file
         fs.unlinkSync(tempFilePath);
 
         res.json({

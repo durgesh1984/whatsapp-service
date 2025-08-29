@@ -5,7 +5,6 @@ const { SessionService } = require('../services/sessionService');
 async function logout(req, res) {
     try {
         const { id } = req.body;
-        console.log(`POST /logout for session: ${id}`);
 
         const connectionData = WhatsAppService.getConnection(id);
         
@@ -37,7 +36,6 @@ async function logout(req, res) {
 
 async function cleanExpiredSessions(req, res) {
     try {
-        console.log('POST /clean-expired');
         
         const expiredSessions = await SessionService.getExpiredSessions();
         let cleanedCount = 0;

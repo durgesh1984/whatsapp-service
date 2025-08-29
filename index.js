@@ -8,16 +8,13 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(config.upload.dir));
 
-// Routes
 app.use('/', routes);
 
-// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
@@ -25,19 +22,15 @@ async function startServer() {
     try {
         console.log('Starting WhatsApp Bot API Server...');
         
-        // Validate configuration
         validateConfig();
         console.log('Configuration validated');
         
-        // Initialize database
         await initDatabase();
         console.log('Database initialized');
         
-        // Restore active sessions
         const { WhatsAppService } = require('./services/whatsappService');
         await WhatsAppService.restoreActiveSessions();
         
-        // Start server
         app.listen(config.port, () => {
             console.log(`WhatsApp Bot API Server running on http://localhost:${config.port}`);
             console.log('Available endpoints:');
@@ -57,7 +50,6 @@ async function startServer() {
     }
 }
 
-// Graceful shutdown
 process.on('SIGINT', () => {
     console.log('\nReceived SIGINT. Shutting down gracefully...');
     process.exit(0);

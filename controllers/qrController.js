@@ -5,7 +5,6 @@ const fs = require('fs');
 async function getQRCode(req, res) {
     try {
         const sessionId = req.params.id;
-        console.log(`GET /get-qr/${sessionId}`);
         
         let sessionData = await SessionService.getSession(sessionId);
         
@@ -96,7 +95,6 @@ function waitForQRCode(connection, timeout = 5000) {
 async function getFreshQRCode(req, res) {
     try {
         const sessionId = req.params.id;
-        console.log(`GET /get-fresh-qr/${sessionId}`);
         
         // Clear existing connection and session files
         WhatsAppService.clearConnection(sessionId);

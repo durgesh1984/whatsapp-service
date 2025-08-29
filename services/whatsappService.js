@@ -10,7 +10,6 @@ class WhatsAppService {
 
     static async createConnection(sessionId) {
         try {
-            console.log(`Creating WhatsApp connection for session: ${sessionId}`);
             const authDir = `${config.session.dir}/${sessionId}`;
             if (!fs.existsSync(authDir)) {
                 fs.mkdirSync(authDir, { recursive: true });
@@ -18,7 +17,6 @@ class WhatsAppService {
 
             const { state, saveCreds } = await useMultiFileAuthState(authDir);
             
-            // Check if already logged in
             const isAlreadyLoggedIn = state.creds?.registered;
             
             const sock = makeWASocket({
@@ -41,7 +39,6 @@ class WhatsAppService {
                 if (qr) {
                     try {
                         connectionData.qr = await QRCode.toDataURL(qr);
-                        console.log(`QR Code generated for session: ${sessionId}`);
                     } catch (error) {
                         console.error('Error generating QR code:', error);
                     }
@@ -49,7 +46,6 @@ class WhatsAppService {
                 
                 if (connection === 'close') {
                     const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-                    console.log(`Connection closed for ${sessionId}:`, lastDisconnect.error, ', reconnecting:', shouldReconnect);
                     
                     if (shouldReconnect) {
                         setTimeout(() => {
@@ -62,7 +58,6 @@ class WhatsAppService {
                     connectionData.isConnected = false;
                     connectionData.isLoggedIn = false;
                 } else if (connection === 'open') {
-                    console.log(`WhatsApp connection opened for session: ${sessionId}`);
                     connectionData.isConnected = true;
                     connectionData.isLoggedIn = true;
                     connectionData.qr = null;
@@ -77,12 +72,10 @@ class WhatsAppService {
             sock.ev.on('creds.update', async (update) => {
                 saveCreds();
                 
-                // When user information becomes available, update scan_id and scan_name
                 if (update.me && connectionData.isLoggedIn) {
                     const scanID = update.me.id || null;
                     const scanName = update.me.name || null;
                     
-                    console.log(`Updating scan info for ${sessionId}: ID=${scanID}, Name=${scanName}`);
                     await SessionService.updateStatus(sessionId, '1', scanID, scanName);
                 }
             });
@@ -124,20 +117,16 @@ class WhatsAppService {
             const { SessionService } = require('./sessionService');
             const activeSessions = await SessionService.getActiveSessions();
             
-            console.log(`Restoring ${activeSessions.length} active sessions...`);
             
             for (const sessionId of activeSessions) {
                 try {
                     await WhatsAppService.createConnection(sessionId);
-                    console.log(`Restored session: ${sessionId}`);
                 } catch (error) {
                     console.error(`Failed to restore session ${sessionId}:`, error);
-                    // Mark as inactive in database if restoration fails
                     await SessionService.updateStatus(sessionId, '0');
                 }
             }
             
-            console.log('Session restoration completed');
         } catch (error) {
             console.error('Error during session restoration:', error);
         }

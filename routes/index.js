@@ -8,10 +8,7 @@ const multer = require('multer');
 
 const router = express.Router();
 
-// Multer for parsing multipart/form-data (no files)
 const upload = multer();
-
-// Maintain backward compatibility with original API endpoints
 router.get('/get-qr/:id', validateSessionId, getQRCode);
 router.get('/get-fresh-qr/:id', validateSessionId, getFreshQRCode);
 router.post('/send-message', upload.none(), validateMessageRequest, sendTextMessage);
