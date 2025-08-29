@@ -1,13 +1,13 @@
 const fs = require('fs');
 const { WhatsAppService } = require('../services/whatsappService');
 const { SessionService } = require('../services/sessionService');
-
+const { config } = require('../config/app');
 async function logout(req, res) {
     try {
         const { id } = req.body;
 
         const connectionData = WhatsAppService.getConnection(id);
-        
+
         if (connectionData && connectionData.sock) {
             await connectionData.sock.logout();
         }
@@ -15,7 +15,7 @@ async function logout(req, res) {
         await SessionService.updateStatus(id, '0');
         WhatsAppService.removeConnection(id);
 
-        const authDir = `./auth_sessions/${id}`;
+        const authDir = `${config.session.dir}/${id}`;
         if (fs.existsSync(authDir)) {
             fs.rmSync(authDir, { recursive: true, force: true });
         }
@@ -36,20 +36,20 @@ async function logout(req, res) {
 
 async function cleanExpiredSessions(req, res) {
     try {
-        
+
         const expiredSessions = await SessionService.getExpiredSessions();
         let cleanedCount = 0;
 
         for (const session of expiredSessions) {
             const sessionId = session.token;
-            
+
             WhatsAppService.removeConnection(sessionId);
-            
-            const authDir = `./auth_sessions/${sessionId}`;
+
+            const authDir = `${config.session.dir}/${sessionId}`;
             if (fs.existsSync(authDir)) {
                 fs.rmSync(authDir, { recursive: true, force: true });
             }
-            
+
             await SessionService.markAsDeleted(sessionId);
             cleanedCount++;
         }

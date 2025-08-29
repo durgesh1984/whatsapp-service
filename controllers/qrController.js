@@ -1,20 +1,20 @@
 const { WhatsAppService } = require('../services/whatsappService');
 const { SessionService } = require('../services/sessionService');
 const fs = require('fs');
-
+const { config } = require('../config/app');
 async function getQRCode(req, res) {
     try {
         const sessionId = req.params.id;
-        
+
         let sessionData = await SessionService.getSession(sessionId);
-        
+
         if (!sessionData) {
             await SessionService.saveSession(sessionId);
             sessionData = await SessionService.getSession(sessionId);
         }
 
         const connectionData = WhatsAppService.getConnection(sessionId);
-        
+
         if (connectionData && connectionData.isLoggedIn) {
             return res.json({
                 status: true,
@@ -29,7 +29,7 @@ async function getQRCode(req, res) {
         let connection = connectionData;
         if (!connection) {
             connection = await WhatsAppService.createConnection(sessionId);
-            
+
             // Wait a bit for QR code to be generated
             await waitForQRCode(connection, 5000);
         }
@@ -79,7 +79,7 @@ async function getQRCode(req, res) {
 function waitForQRCode(connection, timeout = 5000) {
     return new Promise((resolve) => {
         const startTime = Date.now();
-        
+
         const checkQR = () => {
             if (connection.qr || connection.isLoggedIn || (Date.now() - startTime) > timeout) {
                 resolve();
@@ -87,7 +87,7 @@ function waitForQRCode(connection, timeout = 5000) {
                 setTimeout(checkQR, 100);
             }
         };
-        
+
         checkQR();
     });
 }
@@ -95,25 +95,25 @@ function waitForQRCode(connection, timeout = 5000) {
 async function getFreshQRCode(req, res) {
     try {
         const sessionId = req.params.id;
-        
+
         // Clear existing connection and session files
         WhatsAppService.clearConnection(sessionId);
-        
+
         // Remove auth session files
-        const authDir = `./auth_sessions/${sessionId}`;
+        const authDir = `${config.session.dir}/${sessionId}`;
         if (fs.existsSync(authDir)) {
             fs.rmSync(authDir, { recursive: true, force: true });
         }
-        
+
         // Update database status
         await SessionService.updateStatus(sessionId, '0');
-        
+
         // Create fresh connection
         const connection = await WhatsAppService.createConnection(sessionId);
-        
+
         // Wait for QR code to be generated
         await waitForQRCode(connection, 8000);
-        
+
         if (connection.qr) {
             res.json({
                 status: true,
