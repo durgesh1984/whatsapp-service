@@ -114,21 +114,40 @@ class WhatsAppService {
 
     static async restoreActiveSessions() {
         try {
+            console.log('🔄 Starting session restoration...');
             const { SessionService } = require('./sessionService');
             const activeSessions = await SessionService.getActiveSessions();
             
+            console.log(`📊 Found ${activeSessions.length} active sessions in database:`, activeSessions);
             
+            if (activeSessions.length === 0) {
+                console.log('ℹ️ No active sessions to restore');
+                return;
+            }
+
             for (const sessionId of activeSessions) {
+                console.log(`🔌 Attempting to restore session: ${sessionId}`);
                 try {
+                    const authDir = `${config.session.dir}/${sessionId}`;
+                    console.log(`📁 Checking auth directory: ${authDir}`);
+                    
+                    if (!fs.existsSync(authDir)) {
+                        console.log(`❌ Auth directory doesn't exist for session ${sessionId}, marking as inactive`);
+                        await SessionService.updateStatus(sessionId, '0');
+                        continue;
+                    }
+
                     await WhatsAppService.createConnection(sessionId);
+                    console.log(`✅ Successfully initiated restoration for session: ${sessionId}`);
                 } catch (error) {
-                    console.error(`Failed to restore session ${sessionId}:`, error);
+                    console.error(`❌ Failed to restore session ${sessionId}:`, error);
                     await SessionService.updateStatus(sessionId, '0');
                 }
             }
             
+            console.log(`🎉 Session restoration completed. Active connections: ${WhatsAppService.getActiveConnectionsCount()}`);
         } catch (error) {
-            console.error('Error during session restoration:', error);
+            console.error('💥 Critical error during session restoration:', error);
         }
     }
 }

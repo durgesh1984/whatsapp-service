@@ -24,10 +24,24 @@ class SessionService {
     static async saveSession(sessionId) {
         try {
             const connection = await getDbConnection();
-            await connection.execute(
-                'INSERT INTO wa_tokens (token, status, created_at) VALUES (?, ?, NOW())',
-                [sessionId, '0']
+
+            const [existing] = await connection.execute(
+                'SELECT id FROM wa_tokens WHERE token = ?',
+                [sessionId]
             );
+            
+            if (existing.length > 0) {
+                await connection.execute(
+                    'UPDATE wa_tokens SET status = ?, delete_status = ? WHERE token = ?',
+                    ['0', '0', sessionId]
+                );
+            } else {
+                await connection.execute(
+                    'INSERT INTO wa_tokens (token, status, created_at) VALUES (?, ?, NOW())',
+                    [sessionId, '0']
+                );
+            }
+            
             await connection.end();
         } catch (error) {
             console.error('Error saving session to database:', error);
