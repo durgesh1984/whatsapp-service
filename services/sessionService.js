@@ -97,7 +97,7 @@ class SessionService {
             const connection = await getDbConnection();
             const [rows] = await connection.execute(`
                 SELECT token FROM wa_tokens 
-                WHERE status = '1' AND delete_status = '0'
+                WHERE status = "1" AND delete_status = "0"
             `);
             await connection.end();
             return rows.map(row => row.token);

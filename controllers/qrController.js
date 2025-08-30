@@ -10,7 +10,6 @@ async function getQRCode(req, res) {
 
         if (!sessionData) {
             await SessionService.saveSession(sessionId);
-            sessionData = await SessionService.getSession(sessionId);
         }
 
         const connectionData = WhatsAppService.getConnection(sessionId);
