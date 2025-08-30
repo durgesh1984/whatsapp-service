@@ -18,10 +18,18 @@ class WhatsAppService {
             const { state, saveCreds } = await useMultiFileAuthState(authDir);
             
             const isAlreadyLoggedIn = state.creds?.registered;
-            
+            const customLogger = {
+                error: msg => console.error(msg),
+                warn: msg => {},
+                info: msg => {},
+                debug: msg => {},
+                trace: msg => {},
+                child: () => customLogger
+            };
             const sock = makeWASocket({
                 auth: state,
-                printQRInTerminal: config.whatsapp.printQRInTerminal
+                printQRInTerminal: config.whatsapp.printQRInTerminal,
+                logger: customLogger
             });
 
             const connectionData = {
@@ -45,13 +53,22 @@ class WhatsAppService {
                 }
                 
                 if (connection === 'close') {
-                    const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+                    const disconnectReason = lastDisconnect?.error?.output?.statusCode;
+                    console.log(`🔌 Connection closed for ${sessionId}. Reason:`, disconnectReason);
+                    
+                    // Don't reconnect if logged out, bad session, forbidden, or connection replaced
+                    const shouldReconnect = disconnectReason !== DisconnectReason.loggedOut && 
+                                          disconnectReason !== DisconnectReason.badSession &&
+                                          disconnectReason !== DisconnectReason.forbidden &&
+                                          disconnectReason !== DisconnectReason.connectionReplaced;
                     
                     if (shouldReconnect) {
+                        console.log(`🔄 Will reconnect ${sessionId} in ${config.whatsapp.reconnectDelay}ms`);
                         setTimeout(() => {
                             WhatsAppService.createConnection(sessionId);
                         }, config.whatsapp.reconnectDelay);
                     } else {
+                        console.log(`❌ Not reconnecting ${sessionId}, marking as inactive`);
                         await SessionService.updateStatus(sessionId, '0');
                         WhatsAppService.activeConnections.delete(sessionId);
                     }
