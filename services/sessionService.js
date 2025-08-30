@@ -95,10 +95,17 @@ class SessionService {
     static async getActiveSessions() {
         try {
             const connection = await getDbConnection();
+            
+            // Check what's actually in the database
+            const [allRows] = await connection.execute('SELECT token, status, delete_status FROM wa_tokens');
+            console.log('All sessions in DB:', allRows);
+            
             const [rows] = await connection.execute(`
                 SELECT token FROM wa_tokens 
                 WHERE status = "1" AND delete_status = "0"
             `);
+            console.log(`Found ${rows.length} active sessions (status=1)`);
+            
             await connection.end();
             return rows.map(row => row.token);
         } catch (error) {
