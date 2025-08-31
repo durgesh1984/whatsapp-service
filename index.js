@@ -21,15 +21,15 @@ app.use(errorHandler);
 async function startServer() {
     try {
         validateConfig();
-        await testDbConnection();
-        
+        //await testDbConnection();
+
         const { WhatsAppService } = require('./services/whatsappService');
         await WhatsAppService.restoreActiveSessions();
-        
+
         app.listen(config.port, () => {
             console.log(`🚀 Server running on http://localhost:${config.port}`);
         });
-        
+
     } catch (error) {
         console.error('Error starting server:', error);
         process.exit(1);
