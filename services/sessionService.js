@@ -29,7 +29,7 @@ class SessionService {
                 'SELECT id FROM wa_tokens WHERE token = ?',
                 [sessionId]
             );
-            
+
             if (existing.length > 0) {
                 await connection.execute(
                     'UPDATE wa_tokens SET status = ?, delete_status = ? WHERE token = ?',
@@ -41,7 +41,7 @@ class SessionService {
                     [sessionId, '0']
                 );
             }
-            
+
             await connection.end();
         } catch (error) {
             console.error('Error saving session to database:', error);
@@ -52,7 +52,7 @@ class SessionService {
         try {
             const connection = await getDbConnection();
             const [rows] = await connection.execute(
-                'SELECT * FROM wa_tokens WHERE token = ? AND delete_status = "0"',
+                'SELECT * FROM wa_tokens WHERE token = ? AND delete_status = 0',
                 [sessionId]
             );
             await connection.end();
@@ -83,7 +83,7 @@ class SessionService {
         try {
             const connection = await getDbConnection();
             await connection.execute(
-                'UPDATE wa_tokens SET delete_status = "1" WHERE token = ?',
+                'UPDATE wa_tokens SET delete_status = 1 WHERE token = ?',
                 [sessionId]
             );
             await connection.end();
@@ -95,17 +95,17 @@ class SessionService {
     static async getActiveSessions() {
         try {
             const connection = await getDbConnection();
-            
+
             // Check what's actually in the database
             const [allRows] = await connection.execute('SELECT token, status, delete_status FROM wa_tokens');
             console.log('All sessions in DB:', allRows);
-            
+
             const [rows] = await connection.execute(`
                 SELECT token FROM wa_tokens 
-                WHERE status = "1" AND delete_status = "0"
+                WHERE status = '1' AND delete_status = '0'
             `);
             console.log(`Found ${rows.length} active sessions (status=1)`);
-            
+
             await connection.end();
             return rows.map(row => row.token);
         } catch (error) {
