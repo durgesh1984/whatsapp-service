@@ -9,6 +9,7 @@ const dbConfig = {
 
 async function testDbConnection() {
     try {
+        console.log('dbConfig', dbConfig);
         const connection = await mysql.createConnection(dbConfig);
         await connection.ping();
         await connection.end();

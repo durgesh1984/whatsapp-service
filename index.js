@@ -21,7 +21,7 @@ app.use(errorHandler);
 async function startServer() {
     try {
         validateConfig();
-        //await testDbConnection();
+        await testDbConnection();
 
         const { WhatsAppService } = require('./services/whatsappService');
         await WhatsAppService.restoreActiveSessions();
