@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
 const { config, validateConfig } = require('./config/app');
 const { testDbConnection } = require('./config/database');
@@ -8,7 +7,6 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
-app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(config.upload.dir));
