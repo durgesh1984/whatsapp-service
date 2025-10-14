@@ -4,8 +4,8 @@
   "description": "WhatsApp Bot API using Express, MySQL, and Baileys - API Only",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node --max-old-space-size=4048 index.js",
+    "dev": "nodemon --max-old-space-size=4048 index.js"
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
