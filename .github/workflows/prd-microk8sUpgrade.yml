@@ -59,7 +59,7 @@ jobs:
           REPLICAS: ${{ env.REPLICAS }}
           PORT: ${{ env.PORT }}
           NODEPORT: ${{ env.NODEPORT }}
-          MIN_CPU: 500m
+          MIN_CPU: 200m
           MAX_CPU: 500m
           MIN_MEM: 1024Mi
           MAX_MEM: 1024Mi
