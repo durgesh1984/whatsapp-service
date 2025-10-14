@@ -25,11 +25,11 @@ spec:
             - containerPort: __PORT__
           resources:
             limits:
-              cpu: __MIN_CPU__
-              memory: __MIN_MEM__
-            requests:
               cpu: __MAX_CPU__
               memory: __MAX_MEM__
+            requests:
+              cpu: __MIN_CPU__
+              memory: __MIN_MEM__
           envFrom:
             - configMapRef:
                 name: common-config
