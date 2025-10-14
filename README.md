@@ -220,7 +220,7 @@ Example error response:
 
 - Each WhatsApp connection requires a unique session ID
 - Sessions are stored in the database with their status
-- Authentication files are stored in `./auth_sessions/{sessionId}/`
+- Authentication files are stored in `${config.session.dir}/${sessionId}`
 - Expired sessions are automatically cleaned up
 
 ## Security Notes
