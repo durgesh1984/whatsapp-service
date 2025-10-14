@@ -4,7 +4,7 @@ const { config, validateConfig } = require('./config/app');
 const { testDbConnection } = require('./config/database');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
-
+const logger = require('./utils/logger');
 const app = express();
 
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -25,26 +25,26 @@ async function startServer() {
         await WhatsAppService.restoreActiveSessions();
 
         app.listen(config.port, () => {
-            console.log(`🚀 Server running on http://localhost:${config.port}`);
+            logger.info({ port: config.port, event: 'server_started' }, `Server running on http://localhost:${config.port}`);
         });
 
     } catch (error) {
-        console.error('Error starting server:', error);
+        logger.error({ error: error.message, stack: error.stack, event: 'server_start_failed' }, 'Error starting server');
         process.exit(1);
     }
 }
 
 process.on('SIGINT', () => {
-    console.log('\nReceived SIGINT. Shutting down gracefully...');
+    logger.info({ event: 'server_shutdown', signal: 'SIGINT' }, 'Received SIGINT. Shutting down gracefully...');
     process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-    console.log('Received SIGTERM. Shutting down gracefully...');
+    logger.info({ event: 'server_shutdown', signal: 'SIGTERM' }, 'Received SIGTERM. Shutting down gracefully...');
     process.exit(0);
 });
 
 startServer().catch((error) => {
-    console.error('Unhandled error in startServer:', error);
+    logger.fatal({ error: error.message, stack: error.stack, event: 'unhandled_error' }, 'Unhandled error in startServer');
     process.exit(1);
 });
