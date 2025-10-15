@@ -17,20 +17,21 @@ class WhatsAppService {
             }
 
             const { state, saveCreds } = await useMultiFileAuthState(authDir);
-            
+
             const isAlreadyLoggedIn = state.creds?.registered;
             const baileyLogger = {
                 error: msg => logger.error({ baileys: true }, msg),
                 warn: msg => logger.warn({ baileys: true }, msg),
                 info: msg => logger.debug({ baileys: true }, msg),
-                debug: msg => {},
-                trace: msg => {},
+                debug: msg => { },
+                trace: msg => { },
                 child: () => baileyLogger
             };
             const sock = makeWASocket({
                 auth: state,
                 printQRInTerminal: config.whatsapp.printQRInTerminal,
-                logger: baileyLogger
+                logger: baileyLogger,
+                version: [2, 3000, 1025190524],  // 👈 force updated protocol version
             });
 
             const connectionData = {
@@ -44,7 +45,7 @@ class WhatsAppService {
 
             sock.ev.on('connection.update', async (update) => {
                 const { connection, lastDisconnect, qr } = update;
-                
+
                 if (qr) {
                     try {
                         connectionData.qr = await QRCode.toDataURL(qr);
@@ -53,7 +54,7 @@ class WhatsAppService {
                         logger.error({ sessionId, error: error.message }, 'Error generating QR code');
                     }
                 }
-                
+
                 if (connection === 'close') {
                     const disconnectReason = lastDisconnect?.error?.output?.statusCode;
                     const errorMessage = lastDisconnect?.error?.message || 'Unknown error';
@@ -90,10 +91,10 @@ class WhatsAppService {
 
                     // Don't reconnect if logged out, bad session, forbidden, connection replaced, or 405 error
                     const shouldReconnect = disconnectReason !== DisconnectReason.loggedOut &&
-                                          disconnectReason !== DisconnectReason.badSession &&
-                                          disconnectReason !== DisconnectReason.forbidden &&
-                                          disconnectReason !== DisconnectReason.connectionReplaced &&
-                                          disconnectReason !== 405;
+                        disconnectReason !== DisconnectReason.badSession &&
+                        disconnectReason !== DisconnectReason.forbidden &&
+                        disconnectReason !== DisconnectReason.connectionReplaced &&
+                        disconnectReason !== 405;
 
                     if (shouldReconnect) {
                         logger.info({
@@ -161,11 +162,11 @@ class WhatsAppService {
 
             sock.ev.on('creds.update', async (update) => {
                 saveCreds();
-                
+
                 if (update.me && connectionData.isLoggedIn) {
                     const scanID = update.me.id || null;
                     const scanName = update.me.name || null;
-                    
+
                     await SessionService.updateStatus(sessionId, '1', scanID, scanName);
                 }
             });
